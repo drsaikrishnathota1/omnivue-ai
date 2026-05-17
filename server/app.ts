@@ -3,7 +3,7 @@ import cors from 'cors';
 import multer from 'multer';
 
 import { analyzeImageBuffer } from './identifyService';
-import { isConfiguredApiKey, serverConfig } from './env';
+import { getActiveProvider, serverConfig } from './env';
 import type { IdentifyResult } from '../shared/types';
 
 type Analyzer = (buffer: Buffer, filename?: string) => Promise<IdentifyResult>;
@@ -34,6 +34,7 @@ export const createApp = (analyzer: Analyzer = analyzeImageBuffer) => {
       name: 'OmniVue AI API',
       ok: true,
       mode: serverConfig.isLive ? 'live' : 'demo',
+      provider: getActiveProvider(),
       endpoints: {
         health: '/health',
         identify: '/api/identify',
@@ -43,9 +44,11 @@ export const createApp = (analyzer: Analyzer = analyzeImageBuffer) => {
   });
 
   app.get('/health', (_req, res) => {
+    const provider = getActiveProvider();
     res.json({
       ok: true,
-      mode: isConfiguredApiKey(process.env.OPENAI_API_KEY) ? 'live' : 'demo',
+      mode: provider === 'demo' ? 'demo' : 'live',
+      provider,
       env: serverConfig.nodeEnv,
     });
   });

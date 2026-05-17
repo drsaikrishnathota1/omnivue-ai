@@ -37,11 +37,14 @@ const loadIdentifyService = async () => {
   return import('../identifyService');
 };
 
-describe('identifyService scenarios', () => {
+describe('OpenAI scenarios', () => {
   const originalApiKey = process.env.OPENAI_API_KEY;
+  const originalGoogleKey = process.env.GOOGLE_API_KEY;
 
   beforeEach(() => {
     mockCreate.mockReset();
+    delete process.env.GOOGLE_API_KEY;
+    process.env.AI_PROVIDER = 'openai';
   });
 
   afterEach(() => {
@@ -50,6 +53,12 @@ describe('identifyService scenarios', () => {
     } else {
       process.env.OPENAI_API_KEY = originalApiKey;
     }
+    if (originalGoogleKey === undefined) {
+      delete process.env.GOOGLE_API_KEY;
+    } else {
+      process.env.GOOGLE_API_KEY = originalGoogleKey;
+    }
+    delete process.env.AI_PROVIDER;
     vi.resetModules();
   });
 
@@ -86,7 +95,7 @@ describe('identifyService scenarios', () => {
     expect(mockCreate.mock.calls[0]?.[0]?.model).toBe('gpt-4.1');
   });
 
-  it('live scenario: falls back to demo mode when OpenAI rejects the API key', async () => {
+  it('live scenario: falls back to demo when OpenAI rejects the API key in development', async () => {
     process.env.OPENAI_API_KEY = 'sk-invalid-key';
     const { APIError } = await import('openai');
     mockCreate.mockRejectedValue(new APIError(401, undefined, 'Invalid API key', undefined));

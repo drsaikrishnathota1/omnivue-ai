@@ -28,6 +28,7 @@ describe('OmniVue API scenarios', () => {
     expect(response.status).toBe(200);
     expect(response.body.ok).toBe(true);
     expect(response.body.mode).toMatch(/^(live|demo)$/);
+    expect(response.body.provider).toMatch(/^(google|openai|demo)$/);
   });
 
   it('local scenario: identify returns demo payload without calling OpenAI', async () => {
