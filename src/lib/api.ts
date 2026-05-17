@@ -24,10 +24,20 @@ export const analyzeImage = async (imageUri: string): Promise<IdentifyResult> =>
     } as any,
   );
 
-  const response = await fetch(`${apiBaseUrl}/api/identify`, {
-    method: 'POST',
-    body: formData,
-  });
+  let response: Response;
+
+  try {
+    response = await fetch(`${apiBaseUrl}/api/identify`, {
+      method: 'POST',
+      body: formData,
+    });
+  } catch (error) {
+    const message =
+      error instanceof Error ? error.message : 'Unable to reach the OmniVue API service.';
+    throw new Error(
+      `Cannot reach the OmniVue API at ${apiBaseUrl}. Start the local API server and make sure OPENAI_API_KEY is configured. Original error: ${message}`,
+    );
+  }
 
   const payload = await response.json();
 

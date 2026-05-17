@@ -18,6 +18,18 @@ export const createApp = (analyzer: Analyzer = analyzeImageBuffer) => {
   app.use(cors());
   app.use(express.json());
 
+  app.get('/', (_req, res) => {
+    res.json({
+      name: 'OmniVue AI API',
+      ok: true,
+      endpoints: {
+        health: '/health',
+        identify: '/api/identify',
+      },
+      note: 'POST an image file in the "image" field to /api/identify.',
+    });
+  });
+
   app.get('/health', (_req, res) => {
     res.json({ ok: true });
   });

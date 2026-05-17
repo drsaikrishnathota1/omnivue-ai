@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useMemo, useRef, useState } from 'react';
 import {
   Alert,
   Image,
@@ -34,6 +34,7 @@ const insightPills = ['Object recognition', 'Context-aware summaries', 'Safety c
 
 export default function App() {
   const [fontsLoaded] = useFonts({ SpaceGrotesk_400Regular, SpaceGrotesk_700Bold });
+  const scrollRef = useRef<ScrollView | null>(null);
   const [imageUri, setImageUri] = useState<string | null>(null);
   const [result, setResult] = useState<IdentifyResult | null>(null);
   const [loading, setLoading] = useState(false);
@@ -48,6 +49,22 @@ export default function App() {
     return <View style={styles.loadingScreen} />;
   }
 
+  const applyPickedImage = (uri?: string | null) => {
+    if (!uri) {
+      setImageUri(null);
+      setResult(null);
+      setErrorMessage('We could not read the selected image. Please try a different photo.');
+      return;
+    }
+
+    setImageUri(uri);
+    setResult(null);
+    setErrorMessage(null);
+    requestAnimationFrame(() => {
+      scrollRef.current?.scrollTo({ y: 880, animated: true });
+    });
+  };
+
   const choosePhoto = async () => {
     const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
 
@@ -59,13 +76,14 @@ export default function App() {
     const picked = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ['images'],
       quality: 1,
-      allowsEditing: true,
+      selectionLimit: 1,
+      presentationStyle: ImagePicker.UIImagePickerPresentationStyle.FULL_SCREEN,
+      preferredAssetRepresentationMode:
+        ImagePicker.UIImagePickerPreferredAssetRepresentationMode.Current,
     });
 
     if (!picked.canceled) {
-      setImageUri(picked.assets[0]?.uri ?? null);
-      setResult(null);
-      setErrorMessage(null);
+      applyPickedImage(picked.assets[0]?.uri);
     }
   };
 
@@ -78,14 +96,13 @@ export default function App() {
     }
 
     const captured = await ImagePicker.launchCameraAsync({
+      mediaTypes: ['images'],
       quality: 1,
       allowsEditing: true,
     });
 
     if (!captured.canceled) {
-      setImageUri(captured.assets[0]?.uri ?? null);
-      setResult(null);
-      setErrorMessage(null);
+      applyPickedImage(captured.assets[0]?.uri);
     }
   };
 
@@ -118,7 +135,7 @@ export default function App() {
   return (
     <LinearGradient colors={[colors.paper, '#FFF0E6', '#E8F5F7']} style={styles.screen}>
       <StatusBar style="dark" />
-      <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+      <ScrollView ref={scrollRef} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         <View style={styles.heroHeader}>
           <View style={styles.brandRow}>
             <View style={styles.brandBadge}>
@@ -160,6 +177,13 @@ export default function App() {
           <PrimaryButton label="Capture now" onPress={capturePhoto} icon={Camera} />
           <PrimaryButton label="Upload image" onPress={choosePhoto} icon={ImagePlus} tone="light" />
         </View>
+
+        {imageUri ? (
+          <View style={styles.selectionBanner}>
+            <Text style={styles.selectionBannerTitle}>Image selected</Text>
+            <Text style={styles.selectionBannerBody}>Scroll down to review it and tap `Analyze image`.</Text>
+          </View>
+        ) : null}
 
         <Pressable onPress={useSample} style={styles.sampleLink}>
           <Sparkles size={16} color={colors.teal} />
@@ -352,6 +376,24 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 8,
     alignSelf: 'flex-start',
+  },
+  selectionBanner: {
+    borderRadius: radii.md,
+    backgroundColor: '#E9F7F5',
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+    gap: 4,
+  },
+  selectionBannerTitle: {
+    color: colors.teal,
+    fontFamily: 'SpaceGrotesk_700Bold',
+    fontSize: 14,
+  },
+  selectionBannerBody: {
+    color: colors.steel,
+    fontFamily: 'SpaceGrotesk_400Regular',
+    fontSize: 14,
+    lineHeight: 20,
   },
   sampleLinkText: {
     fontFamily: 'SpaceGrotesk_700Bold',
