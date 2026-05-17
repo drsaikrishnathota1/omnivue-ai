@@ -14,23 +14,18 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useFonts, SpaceGrotesk_400Regular, SpaceGrotesk_700Bold } from '@expo-google-fonts/space-grotesk';
 import {
   Aperture,
-  ArrowUpRight,
   Camera,
   ImagePlus,
   ScanSearch,
   ShieldCheck,
-  Sparkles,
 } from 'lucide-react-native';
 
 import { GlassPanel } from './src/components/GlassPanel';
 import { PrimaryButton } from './src/components/PrimaryButton';
 import { ResultSection } from './src/components/ResultSection';
-import { sampleResult } from './src/data/sampleResult';
 import { analyzeImage, apiBaseUrl } from './src/lib/api';
 import { colors, radii, spacing } from './src/theme';
 import type { IdentifyResult } from './shared/types';
-
-const insightPills = ['Object recognition', 'Context-aware summaries', 'Safety cues', 'Better-than-basic scan UX'];
 
 export default function App() {
   const [fontsLoaded] = useFonts({ SpaceGrotesk_400Regular, SpaceGrotesk_700Bold });
@@ -44,6 +39,8 @@ export default function App() {
     if (!result) return null;
     return `${Math.round(result.confidence * 100)}% confidence`;
   }, [result]);
+
+  const isDemoResult = result?.detectedName.includes('(demo mode)') ?? false;
 
   if (!fontsLoaded) {
     return <View style={styles.loadingScreen} />;
@@ -126,12 +123,6 @@ export default function App() {
     }
   };
 
-  const useSample = () => {
-    setResult(sampleResult);
-    setImageUri(null);
-    setErrorMessage(null);
-  };
-
   return (
     <LinearGradient colors={[colors.paper, '#FFF0E6', '#E8F5F7']} style={styles.screen}>
       <StatusBar style="dark" />
@@ -143,58 +134,27 @@ export default function App() {
             </View>
             <Text style={styles.brandText}>OmniVue AI</Text>
           </View>
-          <Text style={styles.heroTitle}>Point. Capture. Understand what you are seeing.</Text>
-          <Text style={styles.heroBody}>
-            A more elegant image identifier built for confidence, context, and cleaner mobile UX.
-          </Text>
+          <Text style={styles.heroTitle}>Capture or upload to analyze.</Text>
+          <Text style={styles.heroBody}>Take a photo or choose one image.</Text>
         </View>
 
-        <GlassPanel>
-          <View style={styles.previewCard}>
-            <View style={styles.previewTop}>
-              <View>
-                <Text style={styles.previewKicker}>Live preview</Text>
-                <Text style={styles.previewTitle}>Designed to feel editorial, not generic.</Text>
-              </View>
-              <ArrowUpRight size={18} color={colors.ink} />
-            </View>
-            <View style={styles.thumbnailStrip}>
-              <View style={[styles.thumbnail, styles.thumbnailPeach]} />
-              <View style={[styles.thumbnail, styles.thumbnailSky]} />
-              <View style={[styles.thumbnail, styles.thumbnailInk]} />
-            </View>
-            <View style={styles.pillWrap}>
-              {insightPills.map((pill) => (
-                <View key={pill} style={styles.pill}>
-                  <Text style={styles.pillText}>{pill}</Text>
-                </View>
-              ))}
-            </View>
-          </View>
-        </GlassPanel>
-
         <View style={styles.actionStack}>
-          <PrimaryButton label="Capture now" onPress={capturePhoto} icon={Camera} />
-          <PrimaryButton label="Upload image" onPress={choosePhoto} icon={ImagePlus} tone="light" />
+          <PrimaryButton label="Capture" onPress={capturePhoto} icon={Camera} />
+          <PrimaryButton label="Upload" onPress={choosePhoto} icon={ImagePlus} tone="light" />
         </View>
 
         {imageUri ? (
           <View style={styles.selectionBanner}>
-            <Text style={styles.selectionBannerTitle}>Image selected</Text>
-            <Text style={styles.selectionBannerBody}>Scroll down to review it and tap `Analyze image`.</Text>
+            <Text style={styles.selectionBannerTitle}>Image ready</Text>
+            <Text style={styles.selectionBannerBody}>Tap Analyze.</Text>
           </View>
         ) : null}
-
-        <Pressable onPress={useSample} style={styles.sampleLink}>
-          <Sparkles size={16} color={colors.teal} />
-          <Text style={styles.sampleLinkText}>Use a polished sample result</Text>
-        </Pressable>
 
         {imageUri ? (
           <GlassPanel>
             <View style={styles.imagePanel}>
               <Image source={{ uri: imageUri }} style={styles.previewImage} />
-              <Text style={styles.imageCaption}>Selected image ready for analysis</Text>
+              <Text style={styles.imageCaption}>Selected image</Text>
             </View>
           </GlassPanel>
         ) : null}
@@ -203,17 +163,13 @@ export default function App() {
           <View style={styles.analysisPanel}>
             <View style={styles.analysisHeader}>
               <View>
-                <Text style={styles.sectionKicker}>Scan engine</Text>
-                <Text style={styles.sectionTitle}>Get a structured answer, not just a label.</Text>
+                <Text style={styles.sectionKicker}>Analyze</Text>
+                <Text style={styles.sectionTitle}>Identify the main object.</Text>
               </View>
               <ScanSearch size={20} color={colors.teal} />
             </View>
-            <Text style={styles.analysisBody}>
-              OmniVue sends the image to a multimodal vision endpoint and returns object identity, alternatives,
-              practical tips, safety notes, and follow-up prompts.
-            </Text>
-            <PrimaryButton label="Analyze image" onPress={runAnalysis} icon={ScanSearch} busy={loading} disabled={!imageUri} />
-            <Text style={styles.apiHint}>API target: {apiBaseUrl}</Text>
+            <Text style={styles.analysisBody}>Get a short result for the image you uploaded.</Text>
+            <PrimaryButton label="Analyze" onPress={runAnalysis} icon={ScanSearch} busy={loading} disabled={!imageUri} />
             {errorMessage ? <Text style={styles.errorText}>{errorMessage}</Text> : null}
           </View>
         </GlassPanel>
@@ -227,30 +183,26 @@ export default function App() {
                   <Text style={styles.resultName}>{result.detectedName}</Text>
                   <Text style={styles.resultCategory}>{result.category}</Text>
                 </View>
-                <View style={styles.confidenceBadge}>
-                  <ShieldCheck size={16} color={colors.success} />
-                  <Text style={styles.confidenceText}>{confidenceLabel}</Text>
+                <View style={styles.badgeRow}>
+                  <View style={[styles.modeBadge, isDemoResult ? styles.demoModeBadge : styles.liveModeBadge]}>
+                    <Text style={[styles.modeBadgeText, isDemoResult ? styles.demoModeText : styles.liveModeText]}>
+                      {isDemoResult ? 'DEMO' : 'LIVE'}
+                    </Text>
+                  </View>
+                  <View style={styles.confidenceBadge}>
+                    <ShieldCheck size={16} color={colors.success} />
+                    <Text style={styles.confidenceText}>{confidenceLabel}</Text>
+                  </View>
                 </View>
               </View>
 
               <Text style={styles.summaryText}>{result.summary}</Text>
 
-              <View style={styles.tagWrap}>
-                {result.visualTags.map((tag) => (
-                  <View key={tag} style={styles.tagChip}>
-                    <Text style={styles.tagText}>{tag}</Text>
-                  </View>
-                ))}
-              </View>
-
-              <ResultSection title="Notable details" items={result.notableDetails} />
-              <ResultSection title="Possible alternatives" items={result.possibleMatches} />
-              <ResultSection title="Care or usage tips" items={result.careOrUsageTips} />
-              <ResultSection title="Safety notes" items={result.safetyNotes} />
-              <ResultSection title="Ask next" items={result.followUpPrompts} />
+              {!isDemoResult ? <ResultSection title="Details" items={result.notableDetails} /> : null}
+              {!isDemoResult ? <ResultSection title="Similar" items={result.possibleMatches} /> : null}
 
               <View style={styles.disclaimerBox}>
-                <Text style={styles.disclaimerTitle}>Important</Text>
+                <Text style={styles.disclaimerTitle}>Note</Text>
                 <Text style={styles.disclaimerText}>{result.disclaimer}</Text>
               </View>
             </View>
@@ -310,72 +262,8 @@ const styles = StyleSheet.create({
     lineHeight: 24,
     maxWidth: '95%',
   },
-  previewCard: {
-    gap: spacing.md,
-  },
-  previewTop: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'flex-start',
-    gap: spacing.md,
-  },
-  previewKicker: {
-    fontFamily: 'SpaceGrotesk_700Bold',
-    color: colors.teal,
-    fontSize: 13,
-    textTransform: 'uppercase',
-    letterSpacing: 0.8,
-  },
-  previewTitle: {
-    marginTop: 6,
-    fontFamily: 'SpaceGrotesk_700Bold',
-    color: colors.ink,
-    fontSize: 23,
-    lineHeight: 27,
-    maxWidth: 250,
-  },
-  thumbnailStrip: {
-    flexDirection: 'row',
-    gap: 12,
-  },
-  thumbnail: {
-    flex: 1,
-    height: 112,
-    borderRadius: radii.md,
-  },
-  thumbnailPeach: {
-    backgroundColor: colors.peach,
-  },
-  thumbnailSky: {
-    backgroundColor: colors.sky,
-  },
-  thumbnailInk: {
-    backgroundColor: '#8BA1B5',
-  },
-  pillWrap: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 10,
-  },
-  pill: {
-    borderRadius: radii.pill,
-    backgroundColor: 'rgba(255,255,255,0.75)',
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-  },
-  pillText: {
-    fontFamily: 'SpaceGrotesk_400Regular',
-    color: colors.ink,
-    fontSize: 13,
-  },
   actionStack: {
     gap: spacing.sm,
-  },
-  sampleLink: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    alignSelf: 'flex-start',
   },
   selectionBanner: {
     borderRadius: radii.md,
@@ -394,10 +282,6 @@ const styles = StyleSheet.create({
     fontFamily: 'SpaceGrotesk_400Regular',
     fontSize: 14,
     lineHeight: 20,
-  },
-  sampleLinkText: {
-    fontFamily: 'SpaceGrotesk_700Bold',
-    color: colors.teal,
   },
   imagePanel: {
     gap: spacing.sm,
@@ -442,11 +326,6 @@ const styles = StyleSheet.create({
     fontSize: 15,
     lineHeight: 23,
   },
-  apiHint: {
-    color: colors.steel,
-    fontFamily: 'SpaceGrotesk_400Regular',
-    fontSize: 12,
-  },
   errorText: {
     color: '#A22F27',
     fontFamily: 'SpaceGrotesk_700Bold',
@@ -487,27 +366,38 @@ const styles = StyleSheet.create({
     color: colors.success,
     fontFamily: 'SpaceGrotesk_700Bold',
   },
+  badgeRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    flexWrap: 'wrap',
+  },
+  modeBadge: {
+    borderRadius: radii.pill,
+    paddingHorizontal: 12,
+    paddingVertical: 9,
+  },
+  demoModeBadge: {
+    backgroundColor: '#FFF0E4',
+  },
+  liveModeBadge: {
+    backgroundColor: '#E6F6EC',
+  },
+  modeBadgeText: {
+    fontFamily: 'SpaceGrotesk_700Bold',
+    fontSize: 13,
+  },
+  demoModeText: {
+    color: colors.coral,
+  },
+  liveModeText: {
+    color: colors.success,
+  },
   summaryText: {
     color: colors.ink,
     fontFamily: 'SpaceGrotesk_400Regular',
     fontSize: 15,
     lineHeight: 24,
-  },
-  tagWrap: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 10,
-  },
-  tagChip: {
-    backgroundColor: colors.sand,
-    borderRadius: radii.pill,
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-  },
-  tagText: {
-    color: colors.ink,
-    fontFamily: 'SpaceGrotesk_700Bold',
-    fontSize: 13,
   },
   disclaimerBox: {
     borderRadius: radii.md,

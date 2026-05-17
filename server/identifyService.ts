@@ -18,31 +18,14 @@ const demoResult: IdentifyResult = {
   detectedName: 'Uploaded object (demo mode)',
   category: 'Visual identification demo',
   confidence: 0.72,
-  summary:
-    'OmniVue is running in fallback demo mode because the OpenAI API key is missing or invalid. The upload pipeline is working, but live AI identification is not authenticated yet.',
-  notableDetails: [
-    'Image upload and backend connection are working.',
-    'The app successfully reached the identify endpoint.',
-    'A real model response is unavailable until OpenAI authentication succeeds.',
-  ],
-  possibleMatches: ['General object', 'Plant or product', 'Household item'],
-  careOrUsageTips: [
-    'Replace the placeholder OPENAI_API_KEY with a real key in .env.',
-    'Restart the API server after updating the key.',
-    'Retry Analyze image once authentication is fixed.',
-  ],
-  safetyNotes: [
-    'This is a fallback demo response, not a real computer vision result.',
-    'Do not use this output for medical, legal, or safety-critical decisions.',
-  ],
-  followUpPrompts: [
-    'Show me whether my OpenAI key is configured correctly.',
-    'How do I restart the OmniVue API server?',
-    'Can you switch this app back to live analysis mode?',
-  ],
-  visualTags: ['demo mode', 'backend reachable', 'auth required'],
-  disclaimer:
-    'Fallback mode is enabled because the live OpenAI request could not be authenticated. Add a valid API key for real identification.',
+  summary: 'Upload worked. Live AI needs a valid API key.',
+  notableDetails: ['Upload worked.', 'Backend worked.'],
+  possibleMatches: ['General object'],
+  careOrUsageTips: ['Add a real API key.'],
+  safetyNotes: ['Demo result only.'],
+  followUpPrompts: ['Try live analysis.'],
+  visualTags: ['demo mode'],
+  disclaimer: 'Add a valid API key for live identification.',
 };
 
 export const guessMimeType = (filename?: string) => {
