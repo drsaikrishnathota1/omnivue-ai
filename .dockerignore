@@ -1,0 +1,14 @@
+node_modules
+.expo
+ios
+android
+.git
+.env
+.env.local
+*.md
+assets
+App.tsx
+src
+index.ts
+app.json
+tsconfig.json

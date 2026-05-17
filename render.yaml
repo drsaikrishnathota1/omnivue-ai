@@ -1,0 +1,21 @@
+services:
+  - type: web
+    name: omnivue-api
+    runtime: node
+    plan: free
+    buildCommand: npm install
+    startCommand: npm run api:start
+    healthCheckPath: /health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: HOST
+        value: 0.0.0.0
+      - key: PORT
+        value: 8787
+      - key: REQUIRE_OPENAI_KEY
+        value: "true"
+      - key: OPENAI_API_KEY
+        sync: false
+      - key: OPENAI_MODEL
+        value: gpt-4.1
