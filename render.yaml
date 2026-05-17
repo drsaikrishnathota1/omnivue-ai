@@ -11,8 +11,6 @@ services:
         value: production
       - key: HOST
         value: 0.0.0.0
-      - key: PORT
-        value: 8787
       - key: REQUIRE_AI_KEY
         value: "true"
       - key: AI_PROVIDER
