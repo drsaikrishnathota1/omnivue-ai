@@ -3,7 +3,7 @@ services:
     name: omnivue-api
     runtime: node
     plan: free
-    buildCommand: npm install
+    buildCommand: npm install && npm run api:build
     startCommand: npm run api:start
     healthCheckPath: /health
     envVars:

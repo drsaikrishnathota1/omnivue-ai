@@ -9,11 +9,16 @@
     "web": "expo start --web",
     "api": "tsx watch server/index.ts",
     "api:once": "tsx server/index.ts",
-    "api:start": "NODE_ENV=production tsx server/index.ts",
+    "api:build": "tsc -p tsconfig.server.json",
+    "api:start": "node dist-server/server/index.js",
     "test": "vitest run",
     "typecheck": "tsc --noEmit && tsc --project tsconfig.server.json --noEmit"
   },
+  "engines": {
+    "node": ">=20"
+  },
   "dependencies": {
+    "@google/generative-ai": "^0.24.1",
     "@expo-google-fonts/space-grotesk": "^0.4.1",
     "cors": "^2.8.6",
     "dotenv": "^17.4.2",
